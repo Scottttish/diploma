@@ -1,0 +1,47 @@
+services:
+
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/app
+    depends_on:
+      - db
+
+  admin:
+    build: ./frontend/admin
+    container_name: admin
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  bot:
+    build: ./frontend/bot
+    container_name: bot
+    environment:
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  migrate:
+    build: ./backend
+    command: alembic upgrade head
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
